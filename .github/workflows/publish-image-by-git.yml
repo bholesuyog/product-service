@@ -40,7 +40,7 @@ jobs:
         # 3. push that image to docker hub
         
     - name: Build & push Docker image
-      uses: mr-smithers-excellent/docker-build-push@v6
+      uses: mr-smithers-excellent/docker-build-push@v5
       with:
         image: bholesuyog/product-service-image
         tags: latest
