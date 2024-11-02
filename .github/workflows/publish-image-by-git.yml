@@ -43,9 +43,7 @@ jobs:
       uses: mr-smithers-excellent/docker-build-push@v6
       with:
         image: bholesuyog/product-service-image
-        context: .
-        push: true
-        tags: bholesuyog/product-service-image:latest
+        tags: latest
         registry: docker.io
         dockerfile: Dockerfile
         username: ${{ secrets.DOCKERUSERNAME }}
