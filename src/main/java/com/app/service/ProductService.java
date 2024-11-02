@@ -4,12 +4,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.app.dto.ProductDTO;
 import com.app.entity.Product;
 import com.app.mapper.ProductMapper;
+import com.app.messaging.EventPublisher;
+import com.app.messaging.events.CreateProductEvent;
+import com.app.messaging.events.UpdateProductEvent;
 import com.app.repository.ProductRepository;
 
 import jakarta.transaction.Transactional;
@@ -17,20 +19,36 @@ import jakarta.transaction.Transactional;
 @Service
 @Transactional
 public class ProductService {
-	@Autowired
+
 	private ProductRepository productRepository;
 
-	@Autowired
 	private ProductMapper productMapper;
+
+	private EventPublisher eventPublisher;
+
+	public ProductService(ProductRepository productRepository, ProductMapper productMapper,
+			EventPublisher eventPublisher) {
+		super();
+		this.productRepository = productRepository;
+		this.productMapper = productMapper;
+		this.eventPublisher = eventPublisher;
+	}
 
 	public ProductDTO createProduct(ProductDTO productDTO) {
 		Product product = productMapper.toEntity(productDTO);
 		product.setCreatedBy("USER");
 		return productMapper.toDto(productRepository.save(product));
+	}
+
+	public void createProductEvent(ProductDTO productDTO) {
+		final var event = CreateProductEvent.builder().productDTO(productDTO).build();
 		
-		//add message to queue
-		
-		
+		eventPublisher.publish(event);
+	}
+
+	public void updateProductEvent(Long id, ProductDTO productDTO) {
+		final var event = UpdateProductEvent.builder().productDTO(productDTO).build();
+		eventPublisher.publish(event);
 	}
 
 	public List<ProductDTO> getAllProducts() {
