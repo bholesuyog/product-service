@@ -1,6 +1,6 @@
 FROM openjdk:17
 
-COPY target/product-service-image.jar product-service-image.jar
+COPY target/product-service-image.jar app.jar
 
 EXPOSE 8080
 

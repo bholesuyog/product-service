@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-service-deployment
+  name: product-service
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: product-service
@@ -17,9 +17,18 @@ spec:
         image: bholesuyog/product-service-image
         ports:
         - containerPort: 8080
+#        volumeMounts:
+#        - name: h2-console-config-volume
+#          mountPath: /config
         env:
         - name: SPRING_ACTIVEMQ_BROKER_URL
-          value: "tcp://activemq:61616"
+          value: "tcp://activemq.default.svc.cluster.local:61616"
+#        - name: SPRING_CONFIG_LOCATION
+#          value: /config/application.properties
+#      volumes:
+#      - name: h2-console-config-volume
+#        configMap:
+#          name: h2-console-config
 ---
 apiVersion: v1 # Kubernetes API version
 kind: Service # Kubernetes resource kind we are creating
