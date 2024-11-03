@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+      - name: product-service
+        image: bholesuyog/product-service-image
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_ACTIVEMQ_BROKER_URL
+          value: "tcp://activemq:61616"
+---
+apiVersion: v1 # Kubernetes API version
+kind: Service # Kubernetes resource kind we are creating
+metadata: # Metadata of the resource kind we are creating
+  name: product-service
+spec:
+  selector:
+    app: product-service
+  ports:
+    - protocol: "TCP"
+      port: 8080 # The port that the service is running on in the cluster
+      targetPort: 8080 # The port exposed by the service
+  type: NodePort # type of the service.
