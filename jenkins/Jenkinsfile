@@ -1,0 +1,120 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven' 
+       // This is the name as in Global Configuration
+    }
+    stages{
+        stage('Build Maven'){
+            steps{
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/bholesuyog/product-service']]])
+                sh 'mvn clean install'
+            }
+        }
+        stage('Build docker image'){
+            steps{
+                script{
+                    sh 'docker build -t bholesuyog/product-service-image .'
+                }
+            }
+        }
+         stage('Push image to Hub'){
+             steps{
+                 script{
+                   withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+					sh 'docker login -u bholesuyog -p ${dockerhubpwd}'
+				   }
+                   sh 'docker push bholesuyog/product-service-image'
+                 }
+             }
+         }
+        // stage('Deploy to k8s'){
+        //     steps{
+        //         script{
+        //             kubernetesDeploy (configs: 'deploymentservice.yaml',kubeconfigId: 'k8sconfigpwd')
+        //         }
+        //     }
+        // }
+    }
+}
+
+
+
+
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_CREDENTIALS = 'docker-hub-credentials'  // ID of the stored Docker Hub credentials
+    }
+    
+    tools {
+        maven 'maven' 
+       // This is the name as in Global Configuration
+    }
+    stages{
+        stage('Build Maven'){
+            steps{
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/bholesuyog/product-service']]])
+                sh 'mvn clean install'
+            }
+        }
+        
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    // Use the credentials from Jenkins to log in to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Login to Docker using the stored username (DOCKER_USERNAME) and password (DOCKER_PASSWORD)
+                        echo "Logging in to Docker Hub..."
+                        sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
+                    }
+                }
+            }
+        }
+        
+        // stage('Build and Push Docker Image') {
+        //     steps {
+        //         script {
+        //             // Docker build and push example (adjust the image name as necessary)
+        //             docker.build('product-service-image:latest').push()
+        //         }
+        //     }
+        // }
+
+        stage('Build docker image') {
+            steps{
+                script{
+                    sh 'docker build -t bholesuyog/product-service-image .'
+                }
+            }
+        }
+        
+        stage('Push image to Hub'){
+            steps{
+                script{
+                    sh 'docker push bholesuyog/product-service-image'
+                }
+            }
+        }
+        
+        // stage('Push image to Hub'){
+        //     steps{
+        //         script{
+        //           withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+        //             sh 'docker login -u bholesuyog -p ${dockerhub-pwd}'
+        //           }
+        //           sh 'docker push bholesuyog/product-service-image'
+        //         }
+        //     }
+        // }
+        
+        // stage('Deploy to k8s'){
+        //     steps{
+        //         script{
+        //             kubernetesDeploy (configs: 'deploymentservice.yaml',kubeconfigId: 'k8sconfigpwd')
+        //         }
+        //     }
+        // }
+    }
+}

@@ -29,6 +29,9 @@ public enum Queue {
 
 	private boolean exceptionContains(final Exception exception, final String pattern) {
 		final var exceptionMessage = exception.getMessage();
+		if(exceptionMessage == null) {
+			return false;
+		}
 		final var stackTrace = getStackTrace(exception);
 		return exceptionMessage.contains(pattern) || stackTrace.contains(pattern);
 	}
